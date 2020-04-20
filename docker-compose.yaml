@@ -1,0 +1,71 @@
+version: '3.5'
+services:
+  app:
+    container_name: app
+    env_file:
+      - db.env
+    environment:
+      - MYSQL_HOST=db
+      - REDIS_HOST=redis
+    image: 'nextcloud:fpm-alpine' # Comment this line out if using LDAPS
+    # Uncomment lines below if you are using LDAPS authentication
+    # The image for Nextcloud need to be built with root CA cert injected
+    # build:
+    #   context: ./build
+    #   dockerfile: Dockerfile-app
+    # image: nextcloud:fpm-alpine-custom
+    links:
+      - db
+      - redis
+    restart: always
+    volumes:
+      - './config/nextcloud:/var/www/html'
+      - 'nextcloud-data:/var/www/html/data'
+  cron:
+    container_name: cron
+    entrypoint: /cron.sh
+    image: 'nextcloud:fpm-alpine'
+    links:
+      - db
+      - redis
+    restart: always
+    volumes:
+      - './config/nextcloud:/var/www/html'
+      - 'nextcloud-data:/var/www/html/data'
+  db:
+    command: '--transaction-isolation=READ-COMMITTED --binlog-format=ROW'
+    container_name: db
+    env_file:
+      - db.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=Password123 # Change this
+    image: 'mariadb:bionic'
+    ports:
+      - '3306:3306'
+    restart: always
+    volumes:
+      - './config/db/lib/mysql:/var/lib/mysql'
+  proxy:
+    container_name: proxy
+    image: 'nginx:alpine'
+    links:
+      - app
+    ports:
+      - '80:80'
+      - '443:443'
+    restart: always
+    volumes:
+      - './config/nextcloud:/var/www/html:ro'
+      - './config/proxy/nginx.conf:/etc/nginx/nginx.conf'
+      - './config/proxy/tls:/etc/nginx/tls'
+  redis:
+    container_name: redis
+    image: 'redis:alpine'
+    restart: always
+volumes:
+  nextcloud-data:
+    driver: local
+    driver_opts:
+      device: ':/nfs/path/to/nextcloud-data'
+      o: 'addr=nas,rw,nfsvers=4.1,rsize=131072,wsize=131072'
+      type: nfs
