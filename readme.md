@@ -5,10 +5,9 @@ This is a docker-compose based installer for Nextcloud, with Nginx reverse proxy
 1. Clone repo
 2. Edit `docker-compose.yaml` and set MYSQL root password
 3. Edit `db.env` and set user, database and database password for Nextcloud
-4. Edit tls.crt and tls.key in config/proxy/tls directory
+4. Edit `tls.crt` and `tls.key` in `config/proxy/tls` directory
 5. For LDAP (unencrypted), execute `docker-compose up -d` to finish
-LDAPS (optional)
-6. For LDAPS (encrypted), execute `docker-compose up -d --build` to finish
+6. (Optional) For LDAPS (encrypted), execute `docker-compose up -d --build` to finish
 
 ### Data Directory
 Nextcloud by default stores all user file content in the webroot `/var/www/html/data`. The default `docker-compose.yaml` has it configured as a NFS volume mount `nextcloud-data`. You can change this to suit your needs.
